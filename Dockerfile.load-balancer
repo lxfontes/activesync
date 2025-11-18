@@ -1,0 +1,12 @@
+FROM golang:1.25-alpine AS builder
+WORKDIR /go/src/skymail/activesync
+COPY go.* .
+RUN go mod download
+COPY cmd/ cmd/
+RUN CGO_ENABLED=0 go build -o /go/bin/load-balancer ./cmd/load-balancer
+
+FROM ubuntu:latest
+RUN apt-get update && apt-get install -y ca-certificates ngrep curl && rm -rf /var/lib/apt/lists/*
+EXPOSE 80
+COPY --from=builder /go/bin/load-balancer /load-balancer
+ENTRYPOINT ["/load-balancer"]
