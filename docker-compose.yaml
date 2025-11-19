@@ -1,12 +1,19 @@
 services:
+  # The user-facing load balancer
   load-balancer:
     build:
       context: .
       dockerfile: Dockerfile.load-balancer
-    # ports:
-    #   - "80:80"
+    ports:
+      - "80:80"
 
-  # NOTE(lxf): Cluster with 2 z-push and one memcached ( where z-push keeps state ).
+  # Fake Profile API service
+  skymail-fake-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.skymail-fake-api
+
+  # Cluster with 2 z-push and one memcached ( where z-push keeps state ).
   memcached-a-1:
     image: memcached:1
   z-push-a-1:
@@ -15,8 +22,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.z-push
-    ports:
-      - "80:8080"
   z-push-a-2:
     env_file:
       - ./cluster-a.env
@@ -24,7 +29,7 @@ services:
       context: .
       dockerfile: Dockerfile.z-push
 
-  # NOTE(lxf): Smaller Cluster with 1 z-push and one memcached.
+  # Smaller Cluster with 1 z-push and one memcached.
   memcached-b-1:
     image: memcached:1
   z-push-b-1:

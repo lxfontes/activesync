@@ -16,9 +16,13 @@ type ProfileRequest struct {
 }
 
 type ProfileResponse struct {
-	FullName          string `json:"full_name"`
-	Email             string `json:"email"`
-	ActiveSyncEnabled bool   `json:"activesync_enabled"`
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	// Indica se o ActiveSync está habilitado para o perfil.
+	ActiveSyncEnabled bool `json:"activesync_enabled"`
+	// Quando presente, indica qual host de ActiveSync usar para esse usuario ( Dedicado )
+	// Quando ausente, o sistema escolhe um host.
+	ActiveSyncHost string `json:"activesync_host,omitempty"`
 }
 
 func main() {
@@ -35,11 +39,31 @@ func main() {
 		}
 
 		log.Printf("Received profile request for email: %s", req.Email)
-
-		response := ProfileResponse{
-			FullName:          "Bods Bodson",
-			Email:             req.Email,
-			ActiveSyncEnabled: true,
+		var response *ProfileResponse
+		switch req.Email {
+		case "lucas@ghz.com.br":
+			response = &ProfileResponse{
+				FullName:          "Sem host definido",
+				Email:             req.Email,
+				ActiveSyncEnabled: true,
+			}
+		case "lucas-teste@ghz.com.br":
+			response = &ProfileResponse{
+				FullName:          "Com host definido",
+				Email:             req.Email,
+				ActiveSyncEnabled: true,
+				ActiveSyncHost:    "cluster-a",
+			}
+		case "lucas-sem-acesso@ghz.com.br":
+			response = &ProfileResponse{
+				FullName:          "Sem acesso ActiveSync",
+				Email:             req.Email,
+				ActiveSyncEnabled: false,
+			}
+		default:
+			// Resposta padrao, simulando usuario invalido
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")

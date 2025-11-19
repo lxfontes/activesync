@@ -3,11 +3,10 @@ WORKDIR /go/src/skymail/activesync
 COPY go.* .
 RUN go mod download
 COPY cmd/ cmd/
-RUN CGO_ENABLED=0 go build -o /go/bin/load-balancer ./cmd/load-balancer
+RUN CGO_ENABLED=0 go build -o /go/bin/skymail-fake-api ./cmd/skymail-fake-api
 
 FROM ubuntu:latest
 RUN apt-get update && apt-get install -y ca-certificates ngrep curl && rm -rf /var/lib/apt/lists/*
 EXPOSE 80
-COPY config.yaml /config.yaml
-COPY --from=builder /go/bin/load-balancer /load-balancer
-ENTRYPOINT ["/load-balancer"]
+COPY --from=builder /go/bin/skymail-fake-api /skymail-fake-api
+ENTRYPOINT ["/skymail-fake-api"]

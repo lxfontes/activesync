@@ -1,0 +1,11 @@
+port: 80
+profile_api_url: http://skymail-fake-api/api/profile
+# Two cluster examples: One with 2 servers and one with a single server
+clusters:
+  - name: cluster-a
+    members:
+      - z-push-a-1:8080
+      - z-push-a-2:8080
+  - name: cluster-b
+    members:
+      - z-push-b-1:8080
