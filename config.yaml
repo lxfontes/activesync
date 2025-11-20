@@ -1,5 +1,5 @@
 port: 80
-profile_api_url: http://skymail-fake-api/api/profile
+profile_api_url: http://skymail-fake-api/emailUser/protocols/
 # Two cluster examples: One with 2 servers and one with a single server
 clusters:
   - name: cluster-a

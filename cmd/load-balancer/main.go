@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -18,18 +17,19 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type ProfileRequest struct {
-	Email string `json:"email"`
+type ProfileProtocols struct {
+	ActiveSync bool `json:"active_sync"`
+	ImapSSL    bool `json:"imap_ssl"`
+	SMTPSSL    bool `json:"smtp_ssl"`
+}
+
+type Profile struct {
+	Success   int              `json:"success"`
+	Protocols ProfileProtocols `json:"protocols"`
 }
 
 type ProfileResponse struct {
-	FullName string `json:"full_name"`
-	Email    string `json:"email"`
-	// Indica se o ActiveSync está habilitado para o perfil.
-	ActiveSyncEnabled bool `json:"activesync_enabled"`
-	// Quando presente, indica qual host de ActiveSync usar para esse usuario ( Dedicado )
-	// Quando ausente, o sistema escolhe um host.
-	ActiveSyncHost string `json:"activesync_host,omitempty"`
+	Result Profile `json:"result"`
 }
 
 type Cluster struct {
@@ -53,24 +53,12 @@ var apiClient = &http.Client{
 }
 
 func getTargetForUser(cfg *Config, username string) (string, error) {
-	req := &ProfileRequest{
-		Email: username,
-	}
-	profileAPIURL := cfg.ProfileAPIURL
-	if profileAPIURL == "" {
-		profileAPIURL = "http://localhost:8080/api/profile"
-	}
+	profileAPIURL := fmt.Sprintf("%s%s", cfg.ProfileAPIURL, username)
 
-	data, err := json.Marshal(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal profile request: %w", err)
-	}
-
-	httpReq, err := http.NewRequest("POST", profileAPIURL, bytes.NewReader(data))
+	httpReq, err := http.NewRequest("GET", profileAPIURL, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create profile API request: %w", err)
 	}
-	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := apiClient.Do(httpReq)
 	if err != nil {
@@ -87,14 +75,17 @@ func getTargetForUser(cfg *Config, username string) (string, error) {
 		return "", fmt.Errorf("failed to decode profile API response: %w", err)
 	}
 
-	if !profileResp.ActiveSyncEnabled {
+	if profileResp.Result.Success == 0 {
+		return "", fmt.Errorf("no profile success for user %s", username)
+	}
+
+	if !profileResp.Result.Protocols.ActiveSync {
 		return "", fmt.Errorf("user %s does not have ActiveSync enabled", username)
 	}
 
-	if profileResp.ActiveSyncHost != "" {
-		// User has a dedicated host
-		return profileResp.ActiveSyncHost, nil
-	}
+	// if !profileResp.Result.Protocols.ImapSSL || !profileResp.Result.Protocols.SMTPSSL {
+	// 	return "", fmt.Errorf("user %s has ActiveSync but no IMAP/SMTP SSL enabled", username)
+	// }
 
 	// No dedicated host, use hash-based distribution
 	clusterIdx := hashUsername(username, len(cfg.Clusters))
