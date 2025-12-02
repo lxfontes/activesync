@@ -23,6 +23,7 @@ type ProfileProtocols struct {
 	SMTPSSL    bool `json:"smtp_ssl"`
 }
 
+// mandar o hash do servidor pro profile
 type Profile struct {
 	Success   int              `json:"success"`
 	Protocols ProfileProtocols `json:"protocols"`
@@ -115,9 +116,10 @@ func main() {
 
 	proxy := &httputil.ReverseProxy{
 		Transport: &http.Transport{
-			DisableKeepAlives: false,
-			MaxIdleConns:      0,
-			IdleConnTimeout:   600 * time.Second,
+			DisableKeepAlives:   false,
+			MaxIdleConns:        5000,
+			MaxIdleConnsPerHost: 1000,
+			IdleConnTimeout:     90 * time.Second,
 		},
 	}
 
@@ -192,11 +194,12 @@ func main() {
 	bindAddr := net.JoinHostPort("0.0.0.0", strconv.Itoa(cfg.Port))
 	log.Printf("Starting z-push-loadbalancer proxy on %s", bindAddr)
 	server := &http.Server{
-		Addr:         bindAddr,
-		Handler:      mux,
-		IdleTimeout:  30 * time.Second,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		Addr:              bindAddr,
+		Handler:           mux,
+		IdleTimeout:       120 * time.Second,
+		ReadTimeout:       0,
+		WriteTimeout:      0,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	log.Fatal(server.ListenAndServe())

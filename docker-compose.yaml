@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.load-balancer
     ports:
-      - "80:80"
+      - "8080:80"
 
   # Fake Profile API service
   skymail-fake-api:
@@ -22,6 +22,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.z-push
+    # ports:
+    #   - "8080:8080"
   z-push-a-2:
     env_file:
       - ./cluster-a.env

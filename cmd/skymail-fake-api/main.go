@@ -62,8 +62,14 @@ func main() {
 			}
 		default:
 			// Resposta padrao, simulando usuario invalido
-			w.WriteHeader(http.StatusBadRequest)
-			return
+			response = &ProfileResponse{
+				Result: Profile{
+					Success: 1,
+					Protocols: map[string]bool{
+						"active_sync": true,
+					},
+				},
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")

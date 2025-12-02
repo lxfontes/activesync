@@ -5,7 +5,3 @@ clusters:
   - name: cluster-a
     members:
       - z-push-a-1:8080
-      - z-push-a-2:8080
-  - name: cluster-b
-    members:
-      - z-push-b-1:8080
