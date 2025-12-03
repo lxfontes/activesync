@@ -19,8 +19,12 @@ rm -rf /tmp/zpush.tar.gz /tmp/z-push
 ln -s /usr/share/z-push/z-push-admin.php /usr/local/bin/z-push-admin
 ln -s /usr/share/z-push/z-push-top.php /usr/local/bin/z-push-top
 
+# Extra libraries ( XMLDocument for CardDav )
+(cd /usr/share && git clone https://gitlab.com/davical-project/awl.git)
+
 chmod 755 /var/lib/z-push /var/log/z-push
 chown -R nginx:nginx \
     /usr/share/z-push \
+    /usr/share/awl \
     /var/lib/z-push \
     /var/log/z-push

@@ -296,7 +296,7 @@
     // BackendMaildir    -  to sync emails from a Maildir.
     // BackendStickyNote -  to sync notes with a Postgres server.
     // BackendVCardDir   -  to sync contacts with vcard folder.
-    define('BACKEND_PROVIDER', 'BackendIMAP');
+    define('BACKEND_PROVIDER', 'BackendCombined');
 
 /**********************************************************************************
  *  Search provider settings

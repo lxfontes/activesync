@@ -172,7 +172,7 @@ global $imap_smtp_params;
 //      mail : no params
 $imap_smtp_params = array(
   "host" => "ssl://smtp-ha.skymail.net.br",
-  "port" => 993,
+  "port" => 465,
   "auth" => true,
   "username" => "imap_username",
   "password" => "imap_password"

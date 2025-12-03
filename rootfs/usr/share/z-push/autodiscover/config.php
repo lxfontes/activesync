@@ -107,4 +107,4 @@
  *  Backend settings
  */
     // the backend data provider
-    define('BACKEND_PROVIDER', 'BackendIMAP');
+    define('BACKEND_PROVIDER', 'BackendCombined');

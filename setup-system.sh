@@ -15,6 +15,8 @@ dnf install -y \
 	git \
 	php \
 	php-cli \
+	php-curl \
+	php-xsl \
 	php-imap \
 	php-intl \
 	php-soap \
