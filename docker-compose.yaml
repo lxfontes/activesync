@@ -18,8 +18,6 @@ services:
     image: memcached:1
   z-push-a-1:
     privileged: true
-    env_file:
-      - ./cluster-a.env
     build:
       context: .
       dockerfile: Dockerfile.z-push
