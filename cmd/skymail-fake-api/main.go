@@ -41,11 +41,12 @@ func main() {
 		}
 
 		deviceName := r.FormValue("device_name")
+		deviceType := r.FormValue("device_type")
 		deviceId := r.FormValue("device_id")
 		activeSyncHost := r.FormValue("active_sync_host")
 
-		log.Printf("Received device registration for email: %s, device_name: %s, device_id: %s, active_sync_host: %s",
-			reqEmail, deviceName, deviceId, activeSyncHost)
+		log.Printf("Received device registration for email: %s, device_name: %s, device_id: %s, device_type: %s, active_sync_host: %s",
+			reqEmail, deviceName, deviceId, deviceType, activeSyncHost)
 
 		response := DeviceRegistrationResponse{
 			Result: DeviceRegistrationResult{
