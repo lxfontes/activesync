@@ -226,8 +226,8 @@ func main() {
 			if err != nil {
 				log.Printf("Device registration notification failed for user %s: %v", username, err)
 			} else {
-				log.Printf("Device registration notified for user %s: device_type=%s, device_id=%s, active_sync_host=%s",
-					username, deviceType, deviceId, activeSyncHost)
+				log.Printf("Device registration notified for user %s: device_type=%s, device_id=%s, device_name=%s, active_sync_host=%s",
+					username, deviceType, deviceId, deviceName, activeSyncHost)
 			}
 		}
 
