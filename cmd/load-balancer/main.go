@@ -65,12 +65,13 @@ var apiClient = &http.Client{
 	Timeout: 5 * time.Second,
 }
 
-func notifyDeviceRegistration(cfg *Config, email, deviceName, deviceId, activeSyncHost string) error {
+func notifyDeviceRegistration(cfg *Config, email, deviceType, deviceId, deviceName, activeSyncHost string) error {
 	registrationURL := fmt.Sprintf("%s%s", cfg.RegistrationAPIURL, email)
 
 	formData := url.Values{}
-	formData.Set("device_name", deviceName)
+	formData.Set("device_type", deviceType)
 	formData.Set("device_id", deviceId)
+	formData.Set("device_name", deviceName)
 	formData.Set("active_sync_host", activeSyncHost)
 
 	resp, err := apiClient.PostForm(registrationURL, formData)
@@ -218,9 +219,10 @@ func main() {
 		if reqCmd == "Provision" {
 			deviceType := req.In.FormValue("DeviceType")
 			deviceId := req.In.FormValue("DeviceId")
+			deviceName := req.In.UserAgent()
 			activeSyncHost, _, _ := strings.Cut(targetHost, ":")
 
-			err := notifyDeviceRegistration(&cfg, username, deviceType, deviceId, activeSyncHost)
+			err := notifyDeviceRegistration(&cfg, username, deviceType, deviceId, deviceName, activeSyncHost)
 			if err != nil {
 				log.Printf("Device registration notification failed for user %s: %v", username, err)
 			} else {
