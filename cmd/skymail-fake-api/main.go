@@ -19,7 +19,45 @@ type ProfileResponse struct {
 	Result Profile `json:"result"`
 }
 
+type DeviceRegistrationResult struct {
+	Success   int `json:"success"`
+	AccountId int `json:"account_id"`
+}
+type DeviceRegistrationResponse struct {
+	Result DeviceRegistrationResult `json:"result"`
+}
+
 func main() {
+	http.HandleFunc("/emailUser/registerDeviceActiveSync/{email}", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		reqEmail := r.PathValue("email")
+		if reqEmail == "" {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		deviceName := r.FormValue("device_name")
+		deviceId := r.FormValue("device_id")
+		activeSyncHost := r.FormValue("active_sync_host")
+
+		log.Printf("Received device registration for email: %s, device_name: %s, device_id: %s, active_sync_host: %s",
+			reqEmail, deviceName, deviceId, activeSyncHost)
+
+		response := DeviceRegistrationResponse{
+			Result: DeviceRegistrationResult{
+				Success:   1,
+				AccountId: 1,
+			},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	})
+
 	http.HandleFunc("/emailUser/protocols/{email}", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

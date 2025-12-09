@@ -1,5 +1,6 @@
 port: 80
 profile_api_url: http://skymail-fake-api/emailUser/protocols/
+register_device_api_url: http://skymail-fake-api/emailUser/registerDeviceActiveSync/
 # Two cluster examples: One with 2 servers and one with a single server
 clusters:
   - name: cluster-a

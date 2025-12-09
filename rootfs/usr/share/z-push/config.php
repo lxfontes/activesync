@@ -112,7 +112,7 @@
  *  LOGAUTHFAIL is logged to the LOGBACKEND.
  */
     define('LOGBACKEND', 'filelog');
-    define('LOGLEVEL', LOGLEVEL_DEBUG);
+    define('LOGLEVEL', LOGLEVEL_WBXML);
     define('LOGAUTHFAIL', true);
 
     // To save e.g. WBXML data only for selected users, add the usernames to the array
@@ -296,7 +296,7 @@
     // BackendMaildir    -  to sync emails from a Maildir.
     // BackendStickyNote -  to sync notes with a Postgres server.
     // BackendVCardDir   -  to sync contacts with vcard folder.
-    define('BACKEND_PROVIDER', 'BackendCombined');
+    define('BACKEND_PROVIDER', 'BackendCardDAV');
 
 /**********************************************************************************
  *  Search provider settings

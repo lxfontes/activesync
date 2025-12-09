@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"sigs.k8s.io/yaml"
@@ -23,14 +24,24 @@ type ProfileProtocols struct {
 	SMTPSSL    bool `json:"smtp_ssl"`
 }
 
-// mandar o hash do servidor pro profile
 type Profile struct {
 	Success   int              `json:"success"`
 	Protocols ProfileProtocols `json:"protocols"`
 }
 
+// Response from /emailUser/protocols/{email}
 type ProfileResponse struct {
 	Result Profile `json:"result"`
+}
+
+type DeviceRegistrationResult struct {
+	Success   int `json:"success"`
+	AccountId int `json:"account_id"`
+}
+
+// Response from /emailUser/registerDeviceActiveSync/{email}
+type DeviceRegistrationResponse struct {
+	Result DeviceRegistrationResult `json:"result"`
 }
 
 type Cluster struct {
@@ -43,14 +54,45 @@ func (c *Cluster) RandMember() string {
 }
 
 type Config struct {
-	Port          int       `json:"port"`
-	ProfileAPIURL string    `json:"profile_api_url"`
-	Clusters      []Cluster `json:"clusters"`
+	Port               int       `json:"port"`
+	ProfileAPIURL      string    `json:"profile_api_url"`
+	RegistrationAPIURL string    `json:"register_device_api_url"`
+	Clusters           []Cluster `json:"clusters"`
 }
 
 var apiClient = &http.Client{
 	// Quanto tempo a API tem pra responder antes de desistir
 	Timeout: 5 * time.Second,
+}
+
+func notifyDeviceRegistration(cfg *Config, email, deviceName, deviceId, activeSyncHost string) error {
+	registrationURL := fmt.Sprintf("%s%s", cfg.RegistrationAPIURL, email)
+
+	formData := url.Values{}
+	formData.Set("device_name", deviceName)
+	formData.Set("device_id", deviceId)
+	formData.Set("active_sync_host", activeSyncHost)
+
+	resp, err := apiClient.PostForm(registrationURL, formData)
+	if err != nil {
+		return fmt.Errorf("device registration request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("device registration API returned non-200 status: %d", resp.StatusCode)
+	}
+
+	var regResp DeviceRegistrationResponse
+	if err := json.NewDecoder(resp.Body).Decode(&regResp); err != nil {
+		return fmt.Errorf("failed to decode device registration response: %w", err)
+	}
+
+	if regResp.Result.Success == 0 {
+		return fmt.Errorf("device registration failed for user %s", email)
+	}
+
+	return nil
 }
 
 func getTargetForUser(cfg *Config, username string) (string, error) {
@@ -83,10 +125,6 @@ func getTargetForUser(cfg *Config, username string) (string, error) {
 	if !profileResp.Result.Protocols.ActiveSync {
 		return "", fmt.Errorf("user %s does not have ActiveSync enabled", username)
 	}
-
-	// if !profileResp.Result.Protocols.ImapSSL || !profileResp.Result.Protocols.SMTPSSL {
-	// 	return "", fmt.Errorf("user %s has ActiveSync but no IMAP/SMTP SSL enabled", username)
-	// }
 
 	// No dedicated host, use hash-based distribution
 	clusterIdx := hashUsername(username, len(cfg.Clusters))
@@ -175,6 +213,22 @@ func main() {
 			return
 		}
 
+		reqCmd := req.In.FormValue("Cmd")
+		// If this is a device registration, notify the profile API
+		if reqCmd == "Provision" {
+			deviceType := req.In.FormValue("DeviceType")
+			deviceId := req.In.FormValue("DeviceId")
+			activeSyncHost, _, _ := strings.Cut(targetHost, ":")
+
+			err := notifyDeviceRegistration(&cfg, username, deviceType, deviceId, activeSyncHost)
+			if err != nil {
+				log.Printf("Device registration notification failed for user %s: %v", username, err)
+			} else {
+				log.Printf("Device registration notified for user %s: device_type=%s, device_id=%s, active_sync_host=%s",
+					username, deviceType, deviceId, activeSyncHost)
+			}
+		}
+
 		originalURL.Host = targetHost
 		originalURL.Scheme = "http"
 		req.Out.URL = originalURL
@@ -185,6 +239,9 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+
+	// This endpoint simulates an authentication error response
+	// It's used when we can't determine a valid target for the user
 	mux.HandleFunc("/auth-error", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Connection", "close")
 		http.Error(w, "Authentication Error", http.StatusUnauthorized)

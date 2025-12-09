@@ -13,6 +13,11 @@ services:
       context: .
       dockerfile: Dockerfile.skymail-fake-api
 
+  skymail-redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
   # Cluster with 2 z-push and one memcached ( where z-push keeps state ).
   memcached-a-1:
     image: memcached:1
@@ -21,5 +26,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.z-push
+    develop:
+      watch:
+        - action: rebuild
+          path: ./rootfs
     ports:
       - "8080:8080"
